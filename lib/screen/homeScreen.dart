@@ -1,5 +1,4 @@
 import 'dart:convert';
-import 'package:coinrich/const.dart';
 import 'package:coinrich/widgets/crpto_cont.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
@@ -26,7 +25,7 @@ class _HomeScreenState extends State<HomeScreen> {
           'https://pro-api.coinmarketcap.com/v1/cryptocurrency/quotes/latest?symbol=BTC,ETH,LTC'),
       headers: {
         'Content-Type': 'application/json',
-        'X-CMC_PRO_API_KEY': apikey,
+        'X-CMC_PRO_API_KEY': '27ab17d1-215f-49e5-9ca4-afd48810c149',
       },
     );
 
