@@ -1,43 +1,28 @@
-import 'dart:convert';
+import 'package:coinrich/provider/crpto_provider.dart';
 import 'package:coinrich/widgets/crpto_cont.dart';
 import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http;
+import 'package:provider/provider.dart';
 
 class HomeScreen extends StatefulWidget {
-  const HomeScreen({super.key});
+  const HomeScreen({Key? key}) : super(key: key);
 
   @override
   State<HomeScreen> createState() => _HomeScreenState();
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  late Future<Map<String, dynamic>> _cryptoData;
+  late CryptoProvider _cryptoProvider;
 
   @override
   void initState() {
     super.initState();
-    _cryptoData = fetchCryptoData();
-  }
-
-  Future<Map<String, dynamic>> fetchCryptoData() async {
-    final response = await http.get(
-      Uri.parse(
-          'https://pro-api.coinmarketcap.com/v1/cryptocurrency/quotes/latest?symbol=BTC,ETH,LTC'),
-      headers: {
-        'Content-Type': 'application/json',
-        'X-CMC_PRO_API_KEY': '27ab17d1-215f-49e5-9ca4-afd48810c149',
-      },
-    );
-
-    if (response.statusCode >= 200 && response.statusCode <= 299) {
-      return json.decode(response.body);
-    } else {
-      throw Exception('Failed to load data');
-    }
+    _cryptoProvider = Provider.of<CryptoProvider>(context, listen: false);
+    _cryptoProvider.fetchCryptoData();
   }
 
   @override
   Widget build(BuildContext context) {
+    print('Scaffold build');
     return Scaffold(
       backgroundColor: Color.fromARGB(255, 84, 80, 80),
       appBar: AppBar(
@@ -60,27 +45,26 @@ class _HomeScreenState extends State<HomeScreen> {
         children: [
           Expanded(
             child: SingleChildScrollView(
-              child: FutureBuilder<Map<String, dynamic>>(
-                future: _cryptoData,
-                builder: (context, snapshot) {
-                  if (snapshot.connectionState == ConnectionState.waiting) {
+              child: Consumer<CryptoProvider>(
+                builder: (context, cryptoProvider, child) {
+                  // Conditions before building the CrptoContainer Widget
+                  if (cryptoProvider.cryptoData.isEmpty) {
                     return Center(child: CircularProgressIndicator());
-                  } else if (snapshot.hasError) {
-                    return Center(child: Text('Error: ${snapshot.error}'));
                   } else {
-                    final cryptoData = snapshot.data!['data'];
+                    print('Crpto Container Building');
+                    final cryptoData = cryptoProvider.cryptoData;
 
-                    // Create a list of CryptoContainer
+                    // Since we are using the CrptoContainer Class wiget so that is why we use List<Widget> and then convert it into list
                     List<Widget> cryptoContainers =
                         cryptoData.keys.map<Widget>((symbol) {
                       final apiData = cryptoData[symbol];
                       return CryptoContainer(apiData: apiData);
                     }).toList();
-
-                    // Ensure that cryptoContainers is of type List<Widget>
+                    
                     List<Widget> typedCryptoContainers =
                         List<Widget>.from(cryptoContainers);
                     final count = typedCryptoContainers.length;
+
                     return Column(
                       children: [
                         SizedBox(height: 15),
@@ -108,7 +92,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                 width: 180,
                               ),
                               Text(
-                                'Count ' + count.toString(),
+                                'Count $count',
                                 style: TextStyle(
                                     color: const Color.fromARGB(
                                         255, 188, 186, 186),

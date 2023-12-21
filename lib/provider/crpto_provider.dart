@@ -1,19 +1,19 @@
-// crypto_provider.dart
-import 'package:coinrich/const.dart';
-import 'package:coinrich/model/crpto_model.dart';
-import 'package:flutter/foundation.dart';
-import 'package:http/http.dart' as http;
 import 'dart:convert';
+import 'package:coinrich/const.dart';
+import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
+import 'package:coinrich/const.dart';
 
 class CryptoProvider extends ChangeNotifier {
-  List<CryptoModel> _cryptoList = [];
+  late Map<String, dynamic> _cryptoData = {};
 
-  List<CryptoModel> get cryptoList => _cryptoList;
+  Map<String, dynamic> get cryptoData => _cryptoData;
 
-  Future<Map<String, dynamic>> fetchCryptoData() async {
+  Future<void> fetchCryptoData() async {
     final response = await http.get(
       Uri.parse(
-          'https://pro-api.coinmarketcap.com/v1/cryptocurrency/quotes/latest?symbol=BTC,ETH,LTC'),
+        'https://pro-api.coinmarketcap.com/v1/cryptocurrency/quotes/latest?symbol=BTC,ETH,LTC',
+      ),
       headers: {
         'Content-Type': 'application/json',
         'X-CMC_PRO_API_KEY': apikey,
@@ -21,10 +21,10 @@ class CryptoProvider extends ChangeNotifier {
     );
 
     if (response.statusCode >= 200 && response.statusCode <= 299) {
-      return json.decode(response.body);
+      _cryptoData = json.decode(response.body)['data'];
+      notifyListeners();
     } else {
       throw Exception('Failed to load data');
     }
-    notifyListeners();
   }
 }
